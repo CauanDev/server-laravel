@@ -18,7 +18,8 @@ return new class extends Migration
             $table->string('model');
             $table->string('year');           
             $table->foreign('owner_id')->references('id')->on('cars_owners');
-            $table->date('last_service');
+            $table->date('last_service')->nullable();
+            $table->integer('number_services');
             $table->timestamps();
         });         
     }

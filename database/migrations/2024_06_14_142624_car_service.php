@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('car_service', function (Blueprint $table) {
             $table->id();
             $table->json('name_service');
-            $table->string('price');
+            $table->decimal('price', 10, 2);
             $table->unsignedBigInteger('car_id');
             $table->foreign('car_id')->references('id')->on('cars');
+            $table->unsignedBigInteger('owner_id');
+            $table->foreign('owner_id')->references('id')->on('cars_owners');
             $table->unsignedBigInteger('worker_id');
             $table->foreign('worker_id')->references('id')->on('workers');
             $table->date('date_service');

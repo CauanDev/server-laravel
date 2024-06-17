@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('sex');
             $table->string('age');
             $table->string('adress');
+            $table->integer('number_services')->nullable();
             $table->timestamps();
         }); 
     }
