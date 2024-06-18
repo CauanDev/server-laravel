@@ -29,7 +29,6 @@ Route::get('/owners-all',[CarsOwnerController::class,'index']);
 Route::post('/owners-register',[CarsOwnerController::class,'register']);
 Route::delete('/delete-owner/{id}',[CarsOwnerController::class, 'destroy']);
 Route::put('/update-owner',[CarsOwnerController::class,'update']);
-Route::get('/all-owner',[CarsOwnerController::class,'show']);
 Route::get('/cars-all/{id}',[CarsOwnerController::class,'show']);
 Route::post('/filter-owners',[CarsOwnerController::class, 'especial']);
 
