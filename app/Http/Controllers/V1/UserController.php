@@ -39,22 +39,16 @@ class UserController extends Controller
     {
         $query = User::query();
 
-        if (isset($request->name)) 
-        {
-            $query->where('name', 'ilike', '%' . $request->name . '%');
-        }
-        
+        if (isset($request->name))$query->where('name', 'ilike', '%' . $request->name . '%');
+           
 
-        if(isset($request->startDate))
-        {
-            $query->whereDate('created_at', '>=', $request->startDate);
-        }
-        if(isset($request->endDate))
-        {
-            $query->whereDate('created_at', '<=', $request->endDate);
-        }
+        if(isset($request->startDate))$query->whereDate('created_at', '>=', $request->startDate);
         
-        $users = $query->get();
+        if(isset($request->endDate))$query->whereDate('created_at', '<=', $request->endDate);
+        if(isset($request->order) && $request->order =="orderDate")$query->orderBy('created_at');
+        if(isset($request->order) && $request->order =="orderName")$query->orderBy('name','asc');
+        if(isset($request->ordenateOrder)) $users = $query->get()->reverse()->values();
+        else $users = $query->get();
         return response()->json([            
                 'status' => true,
                 'users' => $users,            

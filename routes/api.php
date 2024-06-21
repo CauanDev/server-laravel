@@ -7,8 +7,14 @@ use App\Http\Controllers\V1\CarsOwnerController;
 use App\Http\Controllers\V1\ServicesController;
 use App\Http\Controllers\V1\UserController;
 use App\Http\Controllers\V1\WorkersController;
+use App\Http\Controllers\Auth;
+use App\Http\Controllers\ReportController;
 
-// Users
+Route::post('/generate-report', [ReportController::class, 'generate']);
+
+Route::post('/auth', [Auth::class, 'auth']); 
+Route::get('/auth/verify', [Auth::class, 'verify']);
+
 Route::post('/login',[UserController::class, 'login']);
 Route::get('/users-all',[UserController::class, 'index']);
 Route::post('/register',[UserController::class, 'register']);

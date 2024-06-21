@@ -146,13 +146,8 @@ class ServicesController extends Controller
         }
         if(isset($request->owner_id))
         {
-            CarsOwner::where('id' ,$request->owner_id)->first()->increment('number_services');
+            CarsOwner::where('id' ,$request->owner_id)->first('id')->increment('number_services');
             $owner_id = $request->owner_id;
-        }
-        if(isset($request->owner_name) && !isset($request->owner_name))
-        {
-            $owner_id = CarsOwner::where('name',$request->owner_name)->first('id');
-
         }
         $worker_id = $request->worker_id;
 

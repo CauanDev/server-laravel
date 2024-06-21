@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\V1;
 
+use App\Models\CarsService;
 use Exception;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\AuthRequest;
+use App\Models\CarsOwner;
 use Illuminate\Support\Facades\DB;
 use App\Models\Worker;
 use Carbon\Carbon;
@@ -122,8 +124,12 @@ class WorkersController extends Controller
 
     public function show(AuthRequest $request, $id)
     {
-
-        return Worker::where('id',$id)->first();
+        $worker = Worker::where('id',$id)->get();
+        $count = CarsService::where('worker_id',$id)->get()->count();
+        return response()->json([
+            "worker"=>$worker,
+            "count"=>$count
+        ]);
     }
     public function especial(AuthRequest $request)
     {
@@ -134,44 +140,42 @@ class WorkersController extends Controller
         if(isset($request->sex)&& $request->sex !== 'A')$query->where('sex', $request->sex );
         
         
-        if (isset($request->startDate) && isset($request->endDate))$query->whereBetween('created_at', [$request->startDate, $request->endDate]);
-        else
-        {
+        
            
 
-            if(isset($request->startDate))
-            {
-                $query->whereDate('created_at', '>=', $request->startDate);
-            }
-            if(isset($request->endDate))
-            {
-                $query->whereDate('created_at', '<=', $request->endDate);
-            }
-        }
-        if(isset($request->sex) && $request->sex!=='A')$query->where('sex', $request->sex );            
-        if (isset($request->minAge) && isset($request->maxAge)) {
-            $query->whereBetween('age', [$request->minAge, $request->maxAge]);
-        } else {
-            if (isset($request->minAge)) {
-                $query->where('age', '>=', $request->minAge);
-            }
-            if (isset($request->maxAge)) {
-                $query->where('age', '<=', $request->maxAge);
-            }
-        }
+        if(isset($request->startDate))$query->whereDate('created_at', '>=', $request->startDate);
         
-        if (isset($request->minSalary) && isset($request->maxSalary)) {
-            $query->whereBetween(DB::raw('CAST(salary AS DECIMAL)'), [(float)$request->minSalary, (float)$request->maxSalary]);
-        } else {
-            if (isset($request->minSalary)) {
-                $query->where(DB::raw('CAST(salary AS DECIMAL)'), '>=', (float)$request->minSalary);
+        if(isset($request->endDate))$query->whereDate('created_at', '<=', $request->endDate);
+        
+        
+        
+        if (isset($request->minAge))$query->where('age', '>=', $request->minAge);
+        
+        if (isset($request->maxAge))$query->where('age', '<=', $request->maxAge);
+             
+      
+        if (isset($request->minSalary)) $query->where(DB::raw('CAST(salary AS DECIMAL)'), '>=', (float)$request->minSalary);
+        
+        if (isset($request->maxSalary)) $query->where(DB::raw('CAST(salary AS DECIMAL)'), '<=', (float)$request->maxSalary);
+        if(isset($request->order))
+        {
+            if($request->order == "salaryWorkers")$query->orderBy('salary','desc');
+            if($request->order=="nameWorkers")$query->orderBy('name');
+            if($request->order=="moreServices")
+            {
+                $services = CarsService::select('worker_id', DB::raw('count(*) as total'))
+                ->groupBy('worker_id')
+                ->get();
+                
+                $workerIds = $services->pluck('worker_id')->toArray();
+                $query->whereIn('id', $workerIds)->get()->keyBy('id');
+    
             }
-            if (isset($request->maxSalary)) {
-                $query->where(DB::raw('CAST(salary AS DECIMAL)'), '<=', (float)$request->maxSalary);
-            }
-        }    
-            
-        $worker = $query->get();
+        }
+
+        if(isset($request->ordenateOrder))$worker = $query->get()->reverse()->values();              
+        else $worker = $query->get();
+        
         return response()->json([            
                 'status' => true,
                 'workers' => $worker,            

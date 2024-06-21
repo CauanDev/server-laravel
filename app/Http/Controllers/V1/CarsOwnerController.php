@@ -119,8 +119,47 @@ class CarsOwnerController extends Controller
                 $query->where('age', '<=', $request->maxAge);
             }
         }
-            
-        $owner = $query->get();
+        if(isset($request->brand) && $request->brand !== 'All')
+        {
+            $cars = Cars::where('brand',$request->brand)->get('owner_id');
+            $query->whereIn('id',$cars);
+
+        }
+        if(isset($request->order))
+        {
+            if($request->order =="nameOwners")
+            {
+                $query->orderBy('name');
+            }
+ 
+            if($request->order =="moreServices")
+            {
+                $query->orderBy('number_services');
+            }
+            if($request->order =="moreVehicles")
+            {
+                $cars = Cars::select('owner_id', DB::raw('count(*) as total'))
+                ->groupBy('owner_id')
+                ->orderBy('total', 'desc') 
+                ->get();
+
+                $ownerIds = $cars->pluck('owner_id')->toArray();
+      
+                $query->whereIn('id', $ownerIds)->get()->keyBy('id');
+                
+                if(!$request->ordenateOrder)
+                {
+                    $owner = $query->get()->reverse()->values();
+                    return response()->json([            
+                            'status' => true,
+                            'owner' => $owner,            
+                    ],200);
+                }
+
+            }
+        }
+        if($request->ordenateOrder)$owner = $query->get()->reverse()->values();
+        else $owner = $query->get();
         return response()->json([            
                 'status' => true,
                 'owner' => $owner,            
@@ -163,16 +202,19 @@ class CarsOwnerController extends Controller
         $carsQuery = Cars::where('owner_id', $request->id)->select('model','last_service');
 
         $carsTable = $carsQuery->get();
-        
+        $carCount = $carsQuery->count();
         $totalPrice = CarsService::where('owner_id', $request->id)->sum('price');
 
         return response()->json([
             'status' => true,
             'data' => [
                 'cars' => $carsTable,
-                'totalPrice' => $totalPrice
+                'totalPrice' => $totalPrice,
+                'owner'=> CarsOwner::where('id',$request->id)->first()
             ],
-        ], 200);}
+            'count'=> $carCount
+        ], 200);
+    }
 
 
 }
