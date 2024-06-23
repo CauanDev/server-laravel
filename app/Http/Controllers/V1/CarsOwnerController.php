@@ -125,17 +125,11 @@ class CarsOwnerController extends Controller
             $query->whereIn('id',$cars);
 
         }
-        if(isset($request->order))
-        {
-            if($request->order =="nameOwners")
-            {
-                $query->orderBy('name');
-            }
+        if($request->order =="ageOrder")$query->orderBy('age','desc');    
+        if($request->order =="nameOwners") $query->orderBy('name');            
  
-            if($request->order =="moreServices")
-            {
-                $query->orderBy('number_services');
-            }
+        if($request->order =="moreServices") $query->orderBy('number_services');
+            
             if($request->order =="moreVehicles")
             {
                 $cars = Cars::select('owner_id', DB::raw('count(*) as total'))
@@ -145,9 +139,9 @@ class CarsOwnerController extends Controller
 
                 $ownerIds = $cars->pluck('owner_id')->toArray();
       
-                $query->whereIn('id', $ownerIds)->get()->keyBy('id');
+                $query->whereIn('id', $ownerIds);
                 
-                if(!$request->ordenateOrder)
+                if($request->ordenateOrder)
                 {
                     $owner = $query->get()->reverse()->values();
                     return response()->json([            
@@ -157,7 +151,7 @@ class CarsOwnerController extends Controller
                 }
 
             }
-        }
+        
         if($request->ordenateOrder)$owner = $query->get()->reverse()->values();
         else $owner = $query->get();
         return response()->json([            

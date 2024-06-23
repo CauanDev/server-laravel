@@ -25,7 +25,7 @@ class ReportController extends Controller
             
             Log::info('PDF gerado com sucesso.');
     
-            return $pdf->download('relatorio.pdf');
+            return $pdf->download('relatorio'.$title.'.pdf');
         } catch (\Exception $e) {
             Log::error('Erro ao gerar o PDF: ' . $e->getMessage());
             return response()->json(['error' => 'Erro ao gerar o PDF: ' . $e->getMessage()], 500);

@@ -80,6 +80,7 @@
                 @if (isset($item["contCars"]))
                     <tr>
                         <td class="border">{{ $item["name"] }}</td>
+                        <td class="border">{{ $item["age"] }}</td>
                         <td class="border">{{ $item['contServices'] }}</td>
                         <td class="border">{{ $item['contCars'] }}</td>
                         <td class="border">{{ $item['created_at'] }}</td>

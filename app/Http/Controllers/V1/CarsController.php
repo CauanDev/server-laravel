@@ -164,13 +164,14 @@ class CarsController extends Controller
         
     
 
-        if($request->order==='vehiclesName')$query->orderBy('model','asc');
+        if($request->order==='vehiclesName'){$query->orderBy('model','asc');
+        return response($query->get());}
             
         if($request->startDate)$query->whereDate('created_at', '>=', $request->startDate);
 
         if ($request->endDate)$query->whereDate('created_at', '<=', $request->endDate);
         
-        if ($request->brand)$query->where('brand', $request->brand);
+        if ($request->brand!='all')$query->where('brand', $request->brand);
         
 
         if (isset($request->nameOwners) || ($request->order ==="nameOwners")) 
@@ -179,77 +180,100 @@ class CarsController extends Controller
             ->orderBy('name')
             ->get();
 
+            
+           
+            
             $carOwnerIds = $cars->pluck('id')->toArray();
+            if(isset($request->ordenateOrder))$carOwnerIds = array_reverse($carOwnerIds);
+            $orderedResults = collect();
             foreach ($carOwnerIds as $id) {
-                $query->orWhere('owner_id', $id);
+                $find = clone $query;
+                $cars = $find->orWhere('owner_id', $id)->get();
+                $orderedResults = $orderedResults->concat($cars);
+    
             }
-            if(!isset($request->ordenateOrder))
-            {
-                $data = $query->get()->reverse()->values();
-                return response($data);
-            }
+            $query = $orderedResults;
+            $data = $orderedResults;
         } 
-        if(isset($request->ordenateOrder))$data = $query->get()->reverse()->values();
-        else{$data = $query->get();}
+
+
+        if(!($request->order ==="nameOwners"))
+        {
+            if(isset($request->ordenateOrder))$data = $query->get()->reverse()->values();
+            else{$data = $query->get();}        
+        }
+
 
         if(isset($request->subOrder))
         {
+            $suborder=[];
             if($request->subOrder ==="moreVehicleSex")
             {
                 $man = CarsOwner::Where('sex','M')->get('id')->pluck('id');
                 $woman = CarsOwner::Where('sex','F')->get('id')->pluck('id');
                 $manCount=Cars::whereIn('owner_id',$man)->get()->count();
                 $womanCount=Cars::whereIn('owner_id',$woman)->get()->count();
-                return response()->json([
-                    "maior"=> $manCount>$womanCount? $manCount: $womanCount,
-                    "menor"=> $manCount<$womanCount? $manCount: $womanCount,
-                    "maiorS"=>$manCount>$womanCount? "Masculino":"Feminino",
-                    "menorS"=>$manCount<$womanCount? "Masculino":"Feminino",
-                ]);
+                $suborder = [
+                    
+                    "man"=> $manCount,
+                    "woman"=> $womanCount 
+
+                ];
 
             }
             if($request->subOrder ==="countModel")
             {
-                $serviceCounts = Cars::query();
-                $serviceCounts->select('brand', DB::raw('SUM(number_services) as total_services'))
-                ->groupBy('brand');
-                if(isset($request->ordenateOrder)) $serviceCounts->orderBy('total_services');
-                
-                else $serviceCounts->orderBy('total_services', 'desc');
-                
-                return response($serviceCounts->get());
+
+
+                $suborder = Cars::select('brand', DB::raw('COUNT(*) as car_count'))
+                    ->groupBy('brand')
+                    ->get();
 
             }
             if($request->subOrder ==="countModelSex")
             {
                 $manIds = CarsOwner::where('sex', 'M')->pluck('id');
                 $womanIds = CarsOwner::where('sex', 'F')->pluck('id');
-                $womanCounts = Cars::query();
-                $manCounts = Cars::query();
-
-                $manCounts->select('brand', DB::raw('SUM(number_services) as total_services'))
+                
+                $manCounts = Cars::query()
+                    ->select('brand', DB::raw('COUNT(*) as total_cars'))
                     ->whereIn('owner_id', $manIds)
                     ->groupBy('brand');
-                $womanCounts->select('brand', DB::raw('SUM(number_services) as total_services'))
+                
+                $womanCounts = Cars::query()
+                    ->select('brand', DB::raw('COUNT(*) as total_cars'))
                     ->whereIn('owner_id', $womanIds)
-                    ->groupBy('brand');   
-
-                if(isset($request->ordenateOrder))
-                {
-                    $manCounts->orderBy('total_services', 'asc')->get();
-                    $womanCounts->orderBy('total_services', 'asc')->get();
+                    ->groupBy('brand');
+                
+                if ($request->has('ordenateOrder')) {
+                    $manCounts->orderBy('total_cars', 'asc');
+                    $womanCounts->orderBy('total_cars', 'asc');
+                } else {
+                    $manCounts->orderBy('total_cars', 'desc');
+                    $womanCounts->orderBy('total_cars', 'desc');
                 }
-                else
-                {
-                    $manCounts->orderBy('total_services', 'desc');
-                    $womanCounts->orderBy('total_services', 'desc');
-                }
-                        
-                return response()->json([
-                    'men' => $manCounts->get(),
-                    'women' => $womanCounts->get()
-                ]);
+                
+                $menCars = $manCounts->get();
+                $womenCars = $womanCounts->get();
+                
+                $totalMenCars = $menCars->sum('total_cars');
+                $totalWomenCars = $womenCars->sum('total_cars');
+                
+                $moreCarsSex = $totalMenCars > $totalWomenCars ? 'Masculino' : 'Feminino';
+                
+                $suborder = [
+                    'man' => $menCars,
+                    'women' => $womenCars,
+                    'more_cars_sex' => $moreCarsSex,
+                ];
+            
+    
             }
+            return response()->json([
+                "cars"=>$data,
+                "order"=> $suborder
+
+            ]);
         }
         return response($data);
     
