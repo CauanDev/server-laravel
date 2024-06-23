@@ -33,18 +33,6 @@ class ServicesController extends Controller
         $workerQuery = Worker::query();
         
  
-        if (isset($request->moreBrand) && $request->moreBrand) {
-            $car->orderBy('number_services', 'desc');
-            $brandIds = $car->pluck('id');
-            $query->whereIn('owner_id', $brandIds);
-        }
-
-        if (isset($request->moreOwner) && $request->moreOwner) {
-            $ownerQuery->orderBy('number_services', 'desc');
-            $ownerIds = $ownerQuery->pluck('id');
-            $query->whereIn('owner_id', $ownerIds);
-
-        }
 
         if (isset($request->name) && $request->name !=='all') 
         {
@@ -52,6 +40,8 @@ class ServicesController extends Controller
             $ownerIds = $ownerQuery->pluck('id'); 
             $query->whereIn('owner_id', $ownerIds);
         }
+        if(isset($request->minSalary))$query->where('price', '>=', $request->minSalary);
+        if(isset($request->maxSalary))$query->where('price', '<=', $request->maxSalary);
         if (isset($request->worker)&& $request->worker !=='all')
         {
             $workerQuery->where('name', 'ilike', '%' . $request->worker . '%')->get('id');
@@ -76,20 +66,14 @@ class ServicesController extends Controller
             }
         }
 
-        if (isset($request->startDate) && isset($request->endDate))$query->whereBetween('date_service', [$request->startDate, $request->endDate]);
-        else
-        {
+     
            
 
-            if(isset($request->startDate))
-            {
-                $query->whereDate('date_service', '>=', $request->startDate);
-            }
-            if(isset($request->endDate))
-            {
-                $query->whereDate('date_service', '<=', $request->endDate);
-            }
-        }
+        if(isset($request->startDate)) $query->whereDate('date_service', '>=', $request->startDate);
+            
+       if(isset($request->endDate))$query->whereDate('date_service', '<=', $request->endDate);
+            
+        
         if(isset($request->average) && $request->average)
         {
 

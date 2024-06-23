@@ -16,13 +16,19 @@ class ReportController extends Controller
     
             $headings = $request->input('head');
             $data = $request->input('body');    
-            $title = $request->input('title'); 
-            $user = $request->input('user'); 
-    
-            Log::info('Dados recebidos do request.', compact('headings', 'data', 'title', 'user'));
-    
-            $pdf = PDF::loadView('report', compact('headings', 'data', 'title', 'user'))->setPaper('a4', 'portrait');
+            $title = $request->input('title');   
+            $user = $request->input('user');           
+            $subHeadings = $request->input('subHead');
+            $subData = $request->input('subBody');    
+            $subDataExist = $request->input('subDataExist');
             
+
+            Log::info('Dados recebidos do request.', compact('headings', 'data', 'title', 'user'));
+
+            $pdf = PDF::loadView('report', compact(
+                'headings', 'data', 'title', 'user',
+                'subHeadings', 'subData', 'subDataExist'
+            ))->setPaper('a4', 'portrait');
             Log::info('PDF gerado com sucesso.');
     
             return $pdf->download('relatorio'.$title.'.pdf');
