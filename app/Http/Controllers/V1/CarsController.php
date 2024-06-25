@@ -107,6 +107,26 @@ class CarsController extends Controller
         ->orderBy('total', 'DESC')
         ->get();
         
+        if(isset($request->separate)) 
+        {
+            $manIds = CarsOwner::where('sex','M')->get('id')->toArray();
+            $womanIds = CarsOwner::where('sex','F')->get('id')->toArray();
+            $mans = Cars::whereIn('owner_id', $manIds)
+                        ->select('brand', DB::raw('count(*) as total'))
+                        ->groupBy('brand')
+                        ->orderBy('total', 'DESC')
+                        ->get();
+            $womans = Cars::whereIn('owner_id', $womanIds)
+                        ->select('brand', DB::raw('count(*) as total'))
+                        ->groupBy('brand')
+                        ->orderBy('total', 'DESC')
+                        ->get();                        
+            return response()->json([
+                "total"=>$brands,
+                "M"=>$mans,
+                "F"=>$womans]);
+        }
+
         return response()->json($brands);
     }
     public function update(AuthRequest $request)
