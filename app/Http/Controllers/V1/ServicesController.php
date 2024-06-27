@@ -17,10 +17,28 @@ class ServicesController extends Controller
 
     public function index(AuthRequest $request){
         $services = CarsService::orderBy('id', 'DESC')->get();
-
+        $today = Carbon::today();
+        $next7Days = $today->copy()->addDays(7);
+        $next15Days = $today->copy()->addDays(15);
+        $next30Days = $today->copy()->addDays(30);
+    
+        $servicesNext7Days = CarsService::whereBetween('date_service', [$today, $next7Days])
+            ->orderBy('date_service', 'ASC')
+            ->get();
+    
+        $servicesNext15Days = CarsService::whereBetween('date_service', [$today, $next15Days])
+            ->orderBy('date_service', 'ASC')
+            ->get();
+    
+        $servicesNext30Days = CarsService::whereBetween('date_service', [$today, $next30Days])
+            ->orderBy('date_service', 'ASC')
+            ->get();
         return response()->json([
             'status' => true,
             'services' => $services,
+            'services_next_7_days' => $servicesNext7Days,
+            'services_next_15_days' => $servicesNext15Days,
+            'services_next_30_days' => $servicesNext30Days,
         ], 200);
     }
 

@@ -180,7 +180,7 @@ class CarsController extends Controller
             return response($query->get());
         }
 
-        if ($request->moreServices || $request->order ==="moreServices")$query->orderBy('number_services', 'asc');
+        if ($request->moreServices || $request->order ==="moreServices")$query->orderBy('number_services', 'desc');
         
     
 
@@ -191,7 +191,7 @@ class CarsController extends Controller
 
         if ($request->endDate)$query->whereDate('created_at', '<=', $request->endDate);
         
-        if ($request->brand!='all')$query->where('brand', $request->brand);
+        if (isset($request->brand)&&$request->brand!='all')$query->where('brand', $request->brand);
         
 
         if (isset($request->nameOwners) || ($request->order ==="nameOwners")) 
@@ -295,6 +295,7 @@ class CarsController extends Controller
 
             ]);
         }
+        
         return response($data);
     
 }

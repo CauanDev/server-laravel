@@ -169,7 +169,17 @@ class WorkersController extends Controller
                 
                 $workerIds = $services->pluck('worker_id')->toArray();
                 $query->whereIn('id', $workerIds)->get()->keyBy('id');
-    
+                if(isset($request->ordenateOrder))
+                {
+                    return response()->json([            
+                        'status' => true,
+                        'workers' => $query->get(),            
+                ],200);
+                }
+                return response()->json([            
+                    'status' => true,
+                    'workers' => $query->get()->reverse()->values(),            
+            ],200);
             }
         }
 

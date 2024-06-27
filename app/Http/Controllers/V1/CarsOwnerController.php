@@ -38,6 +38,7 @@ class CarsOwnerController extends Controller
                 'sex' => $request->sex,
                 'age' => $request->age,
                 'adress' => $request->adress,
+                'number_services'=>  0
             ]);
 
             DB::commit();
@@ -94,31 +95,21 @@ class CarsOwnerController extends Controller
         if(isset($request->sex)&& $request->sex !== 'A')$query->where('sex', $request->sex );
         
         
-        if (isset($request->startDate) && isset($request->endDate))$query->whereBetween('created_at', [$request->startDate, $request->endDate]);
-        else
-        {
+      
            
 
-            if(isset($request->startDate))
-            {
-                $query->whereDate('created_at', '>=', $request->startDate);
-            }
-            if(isset($request->endDate))
-            {
-                $query->whereDate('created_at', '<=', $request->endDate);
-            }
-        }
+        if(isset($request->startDate))$query->whereDate('created_at', '>=', $request->startDate);
+            
+        if(isset($request->endDate))$query->whereDate('created_at', '<=', $request->endDate);
+            
+        
         if(isset($request->sex) && $request->sex!=='A')$query->where('sex', $request->sex );            
-        if (isset($request->minAge) && isset($request->maxAge)) {
-            $query->whereBetween('age', [$request->minAge, $request->maxAge]);
-        } else {
-            if (isset($request->minAge)) {
-                $query->where('age', '>=', $request->minAge);
-            }
-            if (isset($request->maxAge)) {
-                $query->where('age', '<=', $request->maxAge);
-            }
-        }
+
+        if (isset($request->minAge)) $query->where('age', '>=', $request->minAge);
+        
+        if (isset($request->maxAge)) $query->where('age', '<=', $request->maxAge);
+            
+        
         if(isset($request->brand) && $request->brand !== 'All')
         {
             $cars = Cars::where('brand',$request->brand)->get('owner_id');
@@ -128,27 +119,35 @@ class CarsOwnerController extends Controller
         if($request->order =="ageOrder")$query->orderBy('age','desc');    
         if($request->order =="nameOwners") $query->orderBy('name');            
  
-        if($request->order =="moreServices") $query->orderBy('number_services');
+        if($request->order =="moreServices") $query->orderBy('number_services','desc');
             
             if($request->order =="moreVehicles")
             {
                 $cars = Cars::select('owner_id', DB::raw('count(*) as total'))
                 ->groupBy('owner_id')
-                ->orderBy('total', 'desc') 
+                ->orderBy('total','desc') 
                 ->get();
 
                 $ownerIds = $cars->pluck('owner_id')->toArray();
-      
-                $query->whereIn('id', $ownerIds);
-                
+                $orderedResults = collect();
+                foreach ($ownerIds as $id) {
+                    $find = clone $query;
+                    $owners = $find->orWhere('id', $id)->get();
+                    $orderedResults = $orderedResults->concat($owners);
+        
+                }
                 if($request->ordenateOrder)
                 {
-                    $owner = $query->get()->reverse()->values();
+                    $owner = $orderedResults->reverse()->values();
                     return response()->json([            
                             'status' => true,
                             'owner' => $owner,            
                     ],200);
                 }
+                return response()->json([            
+                    'status' => true,
+                    'owner' => $orderedResults,            
+                    ],200);
 
             }
         
@@ -193,7 +192,7 @@ class CarsOwnerController extends Controller
     }
     public function show(AuthRequest $request)
     {
-        $carsQuery = Cars::where('owner_id', $request->id)->select('model','last_service');
+        $carsQuery = Cars::where('owner_id', $request->id)->select('model','last_service','id');
 
         $carsTable = $carsQuery->get();
         $carCount = $carsQuery->count();
