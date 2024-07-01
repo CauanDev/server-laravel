@@ -10,7 +10,7 @@ class Jwt
 {
   public static function validate()
   {
-    $authorization = $_SERVER['HTTP_AUTHORIZATION'];
+    $authorization = $_SERVER['AUTHORIZATION_KEY'];
     $key = $_ENV['JWT_KEY'];
     try {
       $token = str_replace('Bearer ', '', $authorization);

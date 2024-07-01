@@ -138,25 +138,16 @@ class WorkersController extends Controller
 
         if (isset($request->name)) $query->where('name', 'ilike', '%' . $request->name . '%');
         if(isset($request->sex)&& $request->sex !== 'A')$query->where('sex', $request->sex );
-        
-        
-        
-           
 
-        if(isset($request->startDate))$query->whereDate('created_at', '>=', $request->startDate);
-        
+        if(isset($request->startDate))$query->whereDate('created_at', '>=', $request->startDate);  
         if(isset($request->endDate))$query->whereDate('created_at', '<=', $request->endDate);
-        
-        
-        
-        if (isset($request->minAge))$query->where('age', '>=', $request->minAge);
-        
-        if (isset($request->maxAge))$query->where('age', '<=', $request->maxAge);
-             
-      
-        if (isset($request->minSalary)) $query->where(DB::raw('CAST(salary AS DECIMAL)'), '>=', (float)$request->minSalary);
-        
+
+        if(isset($request->minAge))$query->where(DB::raw('CAST(age AS DECIMAL)'), '>=', (integer)$request->minAge);       
+        if(isset($request->maxAge))$query->where(DB::raw('CAST(age AS DECIMAL)'), '<=', (integer)$request->maxAge);       
+
+        if (isset($request->minSalary)) $query->where(DB::raw('CAST(salary AS DECIMAL)'), '>=', (float)$request->minSalary); 
         if (isset($request->maxSalary)) $query->where(DB::raw('CAST(salary AS DECIMAL)'), '<=', (float)$request->maxSalary);
+
         if(isset($request->order))
         {
             if($request->order == "salaryWorkers")$query->orderBy('salary','desc');

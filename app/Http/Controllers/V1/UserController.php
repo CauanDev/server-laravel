@@ -81,7 +81,7 @@ class UserController extends Controller
  
              return response()->json([
                  'status' => false,
-                 'message' => "Usuário não cadastrado!",
+                 'message' => $e->getMessage(),
              ], 400);
          }
     }
@@ -122,6 +122,8 @@ class UserController extends Controller
     public function update(AuthRequest $request, User $user): JsonResponse
     {
 
+        if(!(isset($request->password)))$password=User::where("id", $user->id)->first('password');
+        else $password=Hash::make($request->password);
         DB::beginTransaction();
 
         try {
@@ -129,7 +131,7 @@ class UserController extends Controller
             $user->update([
                 'name' => $request->name,
                 'email' => $request->email,
-                'password' =>Hash::make($request->password),
+                'password' =>$password,
                 'created_at'=> $user->created_at,
                 'updated_at'=>Carbon::now()->format('Y-m-d H:i:s')
             ]);
